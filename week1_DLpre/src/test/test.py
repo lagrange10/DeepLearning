@@ -1,5 +1,15 @@
 import sys
- 
+import torch
+import random
+
+d1 = torch.tensor([1,2,3,4,5,6,7,8])
+indices = list(range(8))
+random.shuffle(indices)
+batch_indice = torch.tensor(indices)
+print(batch_indice)
+print(d1[batch_indice])
+print(d1[torch.tensor([7,3,2])])
+
 def fibonacci(n): # 生成器函数 - 斐波那契
     a, b, counter = 0, 1, 0
     while True:
