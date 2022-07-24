@@ -32,5 +32,3 @@ trainer = torch.optim.SGD(params=params, lr = lr)
 
 d2l.train_ch3(net,train_iter,test_iter,loss,num_epochs,trainer)
 
-d2l.predict_ch3(net,test_iter)
-show()
