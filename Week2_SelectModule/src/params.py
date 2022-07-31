@@ -41,3 +41,4 @@ def block2():
 
 rgnet = nn.Sequential(block2(), nn.Linear(4, 1))
 rgnet(X)
+ 
