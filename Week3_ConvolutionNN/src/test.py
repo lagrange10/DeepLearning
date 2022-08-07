@@ -30,3 +30,5 @@ Y3 = conv2d(X)
 print(Y3,Y1)
 print((Y3-Y1).sum())
 # assert (Y3-Y1).sum()<1e-6 # 失败！
+
+
