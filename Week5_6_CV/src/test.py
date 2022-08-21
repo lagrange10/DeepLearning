@@ -31,3 +31,4 @@ z = torch.sin(torch.sqrt(x * x + y * y))
 ax = plt.axes(projection='3d')
 ax.plot_surface(x.numpy(), y.numpy(), z.numpy())
 plt.show()
+
