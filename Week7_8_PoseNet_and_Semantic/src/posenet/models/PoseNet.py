@@ -64,6 +64,8 @@ class LossHeader(nn.Module):
 
         self.key = key
         # LossHeader 1
+        # 每个lossheader作用在inception块后面
+        # 由宽高除3的平均池化层 -> 
         self.loss_header1 = nn.Sequential(
             nn.AvgPool2d(kernel_size=5, stride=3),
             nn.ReLU(),
@@ -100,6 +102,7 @@ class LossHeader(nn.Module):
         self.fc_h3_out2 = nn.Linear(2048,4)
 
     def forward(self, x):
+        # 最终是把2048个特征映射到 pose7元组中。
         if self.key == 1:
             x = self.loss_header1(x)
             xyz = self.fc_h12_out1(x)
@@ -114,13 +117,31 @@ class LossHeader(nn.Module):
             wpqr = self.fc_h3_out2(x)
         return xyz, wpqr
 
+class Inception(nn.Module):
+    def __init__(self, in_channels, c1, c2, c3, c4, **kwargs):
+        """c2,c3是二元组"""
+        super(Inception, self).__init__(**kwargs)
+        self.p1_1 = nn.Conv2d(in_channels, c1, kernel_size=1)
+        self.p2_1 = nn.Conv2d(in_channels, c2[0], kernel_size=1)
+        self.p2_2 = nn.Conv2d(c2[0], c2[1], kernel_size=3, padding=1)
+        self.p3_1 = nn.Conv2d(in_channels, c3[0], kernel_size=1)
+        self.p3_2 = nn.Conv2d(c3[0], c3[1], kernel_size=5, padding=2)
+        self.p4_1 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+        self.p4_2 = nn.Conv2d(in_channels, c4, kernel_size=1)
+
+    def forward(self, x):
+        p1 = F.relu(self.p1_1(x))
+        p2 = F.relu(self.p2_2(F.relu(self.p2_1(x))))
+        p3 = F.relu(self.p3_2(F.relu(self.p3_1(x))))
+        p4 = F.relu(self.p4_2(self.p4_1(x)))
+        return torch.cat((p1, p2, p3, p4), dim=1)
 
 class PoseNet(nn.Module):
     def __init__(self, load_weights=True):
         super(PoseNet, self).__init__()
 
         if load_weights:
-            f = open('pretrained_models/places-googlenet.pickle', "rb")
+            f = open('../pretrained_models/places-googlenet.pickle', "rb")
             weights = pickle.load(f, encoding="bytes")
             f.close()
         else:
@@ -133,7 +154,7 @@ class PoseNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             nn.ReLU(),
-            nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=1),
+            nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=1), # ???
             init('conv2/3x3_reduce', nn.Conv2d(64, 64, kernel_size=1, stride=1), weights),
             nn.ReLU(),
             init('conv2/3x3', nn.Conv2d(64, 192, kernel_size=3, stride=1, padding=1), weights),
@@ -210,7 +231,9 @@ class PoseLoss(nn.Module):
 
 
     def forward(self, p1_xyz, p1_wpqr, p2_xyz, p2_wpqr, p3_xyz, p3_wpqr, poseGT):
-
+        """
+        poseGT: 真实的姿势
+        """
         x_gt = poseGT[:,:3]
         w_gt = poseGT[:,3:]
         w_gt_norm = F.normalize(w_gt, p=2)
@@ -220,6 +243,7 @@ class PoseLoss(nn.Module):
         # print('w_gt',w_gt)
         # print('w_gt_norm',w_gt_norm)
 
+        """对一个批量都计算损失"""
         loss1_x = torch.sqrt(torch.mean(torch.square(F.pairwise_distance(x_gt, p1_xyz))))
         loss1_w = torch.sqrt(torch.mean(torch.square(F.pairwise_distance(w_gt_norm, p1_wpqr)))) * self.w1_wpqr
 

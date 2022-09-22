@@ -10,8 +10,8 @@ from models import PoseNet
 import numpy as np
 
 
-os.chdir("D:\Code\DeepLearning\Week7_PoseNet\src\posenet")
-kings_dir = "..\..\data\KingsCollege\KingsCollege"
+os.chdir("D:\Code\DeepLearning\Week7_8_PoseNet_and_Semantic\src\posenet\models")
+kings_dir = "..\..\..\data\KingsCollege\KingsCollege"
 
 class KingsDataset(torch.utils.data.Dataset):
 
@@ -51,7 +51,7 @@ class KingsDataset(torch.utils.data.Dataset):
                 #p0-p2是位置，p3-p6是方向
                 fname,p0,p1,p2,p3,p4,p5,p6 = line.split()
                 self.image_path.append(fname)
-                self.pose.append(list(map(float,[p0,p1,p2,p3,p4,p5,p6])))
+                self.pose.append(torch.tensor(list(map(float,[p0,p1,p2,p3,p4,p5,p6]))))
                 n+=1
                 if n>50:
                     break
@@ -78,7 +78,7 @@ class KingsDataset(torch.utils.data.Dataset):
         ])
         data = transform(data)
 
-        return data.int(),label
+        return data,label
 
     def __len__(self):
         return len(self.image_path)
@@ -87,9 +87,15 @@ class KingsDataset(torch.utils.data.Dataset):
 
 
 
-# train_loader = torch.utils.data.DataLoader(dataset=data,batch_size=2,shuffle=True)
 
+# data = KingsDataset()
+
+# train_loader = torch.utils.data.DataLoader(dataset=data,batch_size=2,shuffle=True)
+# i = 0
 # for img,label in train_loader:
+#     i+=1
+#     if i>5:
+#         break
 #     imgs = [*img]
 #     imgs = [img.permute(1,2,0) for img in imgs]
 #     d2l.show_images(imgs,1,2)
@@ -99,8 +105,5 @@ class KingsDataset(torch.utils.data.Dataset):
 # imgs = [img.permute(1,2,0) for img in imgs]
 # d2l.show_images(imgs,1,n)
 # print(data.pose)
-
-
-
 
 show()
