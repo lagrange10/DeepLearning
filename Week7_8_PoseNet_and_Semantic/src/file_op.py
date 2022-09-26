@@ -3,12 +3,17 @@ import cv2
 from get_file_info import get_num_lines,get_video_duration
 import pointToWH
 
-root = "D:\Code\DataSet\gogo"
+root = "D:\\Code\\DataSet\\gogo"
 os.chdir(root)
-success_data = ["image_eli-f2","image_eli-f4","image_eli-m1","image_eli-m2","image_eli-m3",
-                "image_eli-rand1","image_eli-rand3","image_eli-s3"]
+success_data = ["image_eli-f2","image_eli-f3","image_eli-f4","image_eli-f5"
+                "image_eli-m1","image_eli-m2","image_eli-m3",
+                "image_eli-rand1","image_eli-rand3","image_eli-rand5",
+                "image_eli-s3","image_eli-s4"
+                "image_rect-f4","image_rect-f3","image_rect-f2","image_rect-m1"
+                
+                ]
 success_data = []
-process_data = []
+process_data = ["image_eli-m2"]
 
 def dfs(path):
     files = os.listdir(path)

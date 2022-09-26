@@ -2,8 +2,8 @@
 import cv2
 import os
 from get_file_info import get_video_duration
-i = "rect-m" + "2"
-i = "eli-s" + "2"
+i = "rect-f" + "4"
+i = "eli-f" + "6"
 dir = "D:\\Code\\DataSet\\gogo\\"+ i +".mp4"
 
 # 从指定的路径读取视频
@@ -12,7 +12,7 @@ t = get_video_duration(dir)
 print(t)
 try :
      # 创建名为data的文件夹
-     os.chdir(f"D:\Code\DataSet\gogo")
+     os.chdir(f"D:\\Code\\DataSet\\gogo")
      if not os.path.exists( f'image_{i}'):
          os.makedirs( f'image_{i}' )
   

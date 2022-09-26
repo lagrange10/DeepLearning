@@ -4,7 +4,7 @@ import torch
 import torchvision
 from d2l import torch as d2l
 
-os.chdir("D:\Code\DeepLearning\Week7_PoseNet")
+os.chdir("D:\\Code\\DeepLearning\\Week7_PoseNet")
 #@save
 d2l.DATA_HUB['voc2012'] = (d2l.DATA_URL + 'VOCtrainval_11-May-2012.tar',
                            '4e443f8a2eca6b1dac8a6c57641b67dd40621a49')

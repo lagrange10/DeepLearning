@@ -1,12 +1,11 @@
 import os
-from cv2 import sort
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-rootdir = "D:\Code\DataSet\gogo\image_eli-s3"
-dir_sparse = "D:\Code\DataSet\gogo\imagerect\\2.nvm.cmvs\\00\\bundle.rd.out"
+rootdir = "D:\\Code\\DataSet\\gogo\\image_eli-m2"
+dir_sparse = "D:\\Code\\DataSet\\gogo\\imagerect\\2.nvm.cmvs\\00\\bundle.rd.out"
 dir_dense = rootdir+f"\\2.nvm.cmvs\\00\\cameras_v2.txt"
 
 
@@ -72,7 +71,7 @@ def pose_pos_plot(pose:torch.Tensor) -> None :
 
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
+    # ax.set_zlabel('Z Label')
     ax.scatter(x,y,z,c='r')
     # plt.autoscale(True)
     plt.ylim(-10,10)
