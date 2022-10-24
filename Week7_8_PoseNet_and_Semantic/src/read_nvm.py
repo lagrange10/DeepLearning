@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-dir = "D:\\Code\\DataSet\\gogo\\image_eli-m3\\2.nvm"
+dir = "D:\\Code\\DataSet\\gogo\\image_eli-m3\\1.nvm"
 
 def sparse_reconstruction(dir:str) -> list:
     with open(dir) as f:
@@ -19,10 +19,11 @@ def sparse_reconstruction(dir:str) -> list:
                 pose_ls.append([pose.split()[0],list(map(float,pose.split()[1:]))])
             except StopIteration:
                 break
+        pose_ls.sort(key= lambda x:int(x[0].strip("frame").strip(".jpg\n")))
         return pose_ls
 
 pose_ls = sparse_reconstruction(dir)
-pose_ls.sort(key= lambda x:int(x[0].strip("frame").strip(".jpg\n")))
+
 pose_xy = torch.tensor([pose[1] for pose in pose_ls])[:,[5,7]]
 pose_xyz = torch.tensor([pose[1] for pose in pose_ls])[:,5:8]
 def pose_pos_xoz_plot(pose:torch.Tensor) -> None :

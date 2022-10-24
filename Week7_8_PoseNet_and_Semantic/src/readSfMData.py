@@ -1,12 +1,17 @@
+from logging import root
 import os
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-rootdir = "D:\\Code\\DataSet\\gogo\\image_eli-m2"
-dir_sparse = "D:\\Code\\DataSet\\gogo\\imagerect\\2.nvm.cmvs\\00\\bundle.rd.out"
-dir_dense = rootdir+f"\\2.nvm.cmvs\\00\\cameras_v2.txt"
+from file_op import get_num_frames
+from utils.constant_func import *
+oj = os.path.join
+rootdir = "D:\\Code\\DataSet\\gogo"
+vname = "eli-rand99.mp4"
+dir_sparse = oj(rootdir,vname,"1.nvm")
+
 
 
 
@@ -29,7 +34,7 @@ def dense_restruction(dir:str) -> list:
                 pose += (" " + next(f).strip("/n"))
                 for i in range(6):
                     next(f)
-                pose_ls.append((origin_fname,list(map(float,pose.split()))))
+                pose_ls.append((origin_fname.strip("\n"),list(map(float,pose.split()))))
             except StopIteration:
                 break
         pose_ls.sort(key= lambda x:int(x[0].strip("frame").strip(".jpg\n")))
@@ -43,20 +48,78 @@ def sparse_reconstruction(dir:str) -> list:
         pose_ls = []
         while True:
             try:
-                pose = next(f).strip("/n")
-                pose_ls.append(list(map(float,pose.split())))
+                pose = next(f).strip("\n")
+                if not len(pose):
+                    break
+                pose_ls.append([pose.split()[0],list(map(float,pose.split()[1:]))])
             except StopIteration:
                 break
+        pose_ls.sort(key= lambda x:int(x[0].strip("frame").strip(".jpg\n")))
         return pose_ls
 
-# TraceData = sparse_reconstruction(dir_sparse)
-# TraceData = torch.tensor(TraceData[0:120])
-pose_ls = dense_restruction(dir_dense)
-TraceData = torch.tensor([pose[1] for pose in pose_ls])
-# TraceData = torch.tensor([pose[1] for pose in pose_ls if pose[1][0]<15 and pose[1][1]>-10])
-fname_ls = [pose[0] for pose in pose_ls]
-print(fname_ls[0:10],TraceData[0:10,0:3])
+def save_dense_restuction(rootdir,vname) -> None:
+    vname = "image_" + vname[:-4]
+    """把密集重建结果保存在data"""
+    workspace = oj(rootdir,vname)
+    dir_dense = oj(rootdir,vname,"sparse.nvm.cmvs\\00\\cameras_v2.txt")
+    try:
+        open(dir_dense)
+    except FileNotFoundError:
+        try:
+            f = [i for i in ls(workspace) if ".nvm.cmvs" in i][0]
+        except:
+            return
+        f = oj(workspace,f)
+        cmd = f"move {f} {workspace}/sparse.nvm.cmvs"
+        print(cmd)
+        os.system(cmd)
 
+    pose_ls = dense_restruction(dir_dense)
+    TraceData = torch.tensor([pose[1] for pose in pose_ls])
+    # TraceData = torch.tensor([pose[1] for pose in pose_ls if pose[1][0]<15 and pose[1][1]>-10])
+    fname_ls = [pose[0].strip("\n") for pose in pose_ls] #\n来自文件    image_idx = [int(f.strip("frame").strip(".jpg")) for f in fname_ls]
+    # print(fname_ls[0:10],TraceData[0:10,0:3])
+    os.chdir(workspace)
+
+    num_frames = get_num_frames(workspace)
+    if not os.path.exists( f'data'):
+        os.makedirs( f'data' )
+    os.chdir('data')
+
+    
+    outls = []
+    for i in range(len(pose_ls)):
+        pose = [pose_ls[i][0].strip("\n")]+list(map(str,[pose[1] for pose in pose_ls][i]))
+        outls.append(pose)
+    if len(outls) < num_frames:
+        """有缺失的帧"""
+        print("output:",len(outls),"input:",num_frames)
+        print("有缺失的帧")
+    out = pd.DataFrame(outls)
+    out.to_csv("posedata.csv")
+
+    with open('posedata.txt',"w+") as f:
+        f.write("# pose vec-7 xyz-pqrs\n\n")
+        for i in range(len(pose_ls)):
+            pose = [pose_ls[i][0].strip("\n")]+list(map(str,[pose[1] for pose in pose_ls][i]))
+            f.write(" ".join(pose)+"\n")
+
+    outls = []
+    for i in range(len(pose_ls)):
+        # 考虑插值
+        # pose_x_np = TraceData[:,[0,2]].numpy()[:,0]
+        # pose_y_np = TraceData[:,[0,2]].numpy()[:,1]
+        pose_xz = [pose_ls[i][0].strip("\n")] + list(map(str,TraceData[:,[0,2]].tolist()[i]))
+        outls.append(pose_xz)
+    out = pd.DataFrame(outls,columns=["fname","posX","posY"])
+    out.to_csv("pos_xy_data.csv")
+
+    with open('pos_xy_data.txt',"w+") as f:
+        f.write("# position vec-2 xy\n\n")
+        for i in range(len(pose_ls)):
+            pose_xz = [pose_ls[i][0].strip("\n")] + list(map(str,TraceData[:,[0,2]].tolist()[i]))
+            f.write(" ".join(pose_xz)+"\n")
+    os.chdir(rootdir)
 
 def pose_pos_plot(pose:torch.Tensor) -> None :
     """
@@ -93,40 +156,9 @@ def pose_pos_xoz_plot(pose:torch.Tensor) -> None :
     plt.autoscale(True)
     plt.show()
 
-pose_pos_plot(TraceData)
-pose_pos_xoz_plot(TraceData)
+# pose_pos_plot(TraceData)
+# pose_pos_xoz_plot(TraceData)
 
-os.chdir(rootdir)
-if not os.path.exists( f'data'):
-    os.makedirs( f'data' )
-os.chdir('data')
-
-
-outls = []
-for i in range(len(pose_ls)):
-    pose = [pose_ls[i][0].strip("\n")]+list(map(str,[pose[1] for pose in pose_ls][i]))
-    outls.append(pose)
-out = pd.DataFrame(outls)
-out.to_csv("posedata.csv")
-
-with open('posedata.txt',"w+") as f:
-    f.write("# pose vec-7 xyz-pqrs\n\n")
-    for i in range(len(pose_ls)):
-        pose = [pose_ls[i][0].strip("\n")]+list(map(str,[pose[1] for pose in pose_ls][i]))
-        f.write(" ".join(pose)+"\n")
-
-outls = []
-for i in range(len(pose_ls)):
-    pose_xz = [pose_ls[i][0].strip("\n")] + list(map(str,TraceData[:,[0,2]].tolist()[i]))
-    outls.append(pose_xz)
-out = pd.DataFrame(outls)
-out.to_csv("pos_xy_data.csv")
-
-with open('pos_xy_data.txt',"w+") as f:
-    f.write("# position vec-2 xy\n\n")
-    for i in range(len(pose_ls)):
-        pose_xz = [pose_ls[i][0].strip("\n")] + list(map(str,TraceData[:,[0,2]].tolist()[i]))
-        f.write(" ".join(pose_xz)+"\n")
 
 def read_data_plot(fname):
     with open(fname,"r") as f:
@@ -150,3 +182,6 @@ def read_data_plot(fname):
         ax.scatter(x,z,c='r')
         plt.autoscale(True)
         plt.show()
+
+if __name__ == "__main__":
+    save_dense_restuction(rootdir,vname="eli-rand100.mp4")

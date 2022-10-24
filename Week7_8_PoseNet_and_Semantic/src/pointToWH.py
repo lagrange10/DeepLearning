@@ -38,16 +38,17 @@ def calc_wh(dir):
     else:
         calc_wh_and_tofile_eli(x1,y1,x2,y2,x3,y3,x4,y4,dir)
 
-def calc_whr(f):
-    w,h = map(int,input().split())
+def log_whr(f,w,h):
     f.write("\n\n标注宽高比: {:.3f}".format(w/h)+"\n真实宽高比:"+str(6.6/4.8)+\
     "\n误差：{:.3f}".format(abs(w/h-1.375)/1.375))
 
-def calc_pixel_rate(f):
-    x1,y1,x2,y2 = map(float,input().split())
-    d = math.dist((x1,y1),(x2,y2))
+def log_pixel_rate(f,w,h):
     D = 6.6
-    f.write(f"\n-像素比: 1(像素) : {D/d:.3f}m")
+    d = 4.8
+    f.write(f"\n-像素比(长轴): 1(像素) : {D/w:.3f}m")
+    f.write(f"\n-像素比(短轴): 1(像素) : {d/h:.3f}m")
+    if D/w - d/h > 0.5:
+        f.write(f"\n恢复的不是很准")
 
 # dir = "D:\Code\DataSet\gogo\dataset\image_eli-f2\\readme.txt"
 # calc_pixel_rate(dir)

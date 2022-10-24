@@ -3,8 +3,9 @@ import os
 import torch
 import matplotlib.pyplot as plt
 
+oj = os.path.join
 def get_video_duration(filename:str):
-    """获得视频长度"""
+    """获得视频长度,保证在视频所在目录"""
     cap = cv2.VideoCapture(filename)
     if cap.isOpened():
         rate = cap.get(5)
